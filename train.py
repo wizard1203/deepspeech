@@ -185,7 +185,7 @@ if __name__ == '__main__':
         print('sample_rate: ', args.sample_rate)
         with open(args.labels_path) as label_file:
             labels = str(''.join(json.load(label_file)))
-
+        print("********  labels : \n", labels)
         audio_conf = dict(sample_rate=args.sample_rate,
                           window_size=args.window_size,
                           window_stride=args.window_stride,
