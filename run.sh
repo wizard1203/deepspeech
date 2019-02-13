@@ -1,0 +1,1 @@
+python train.py  --rnn-type lstm --hidden-size 800 --hidden-layers 5 --checkpoint --train-manifest /home/comp/csshshi/data/an4data/an4_train_manifest.csv --val-manifest /home/comp/csshshi/data/an4data/an4_val_manifest.csv --epochs 100 --num-workers 4 --cuda --batch-size 32 --learning-anneal 1.01 --augment
