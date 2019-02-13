@@ -176,6 +176,7 @@ def _collate_fn(batch):
     def func(p):
         return p[0].size(1)
 
+    print("_collate_fn==============")
     batch = sorted(batch, key=lambda sample: sample[0].size(1), reverse=True)
     longest_sample = max(batch, key=func)[0]
     freq_size = longest_sample.size(0)
@@ -214,11 +215,14 @@ class BucketingSampler(Sampler):
         """
         super(BucketingSampler, self).__init__(data_source)
         self.data_source = data_source
+
         ids = list(range(0, len(data_source)))
         self.bins = [ids[i:i + batch_size] for i in range(0, len(ids), batch_size)]
 
     def __iter__(self):
         for ids in self.bins:
+            # todo debug ==============
+            print(ids)
             np.random.shuffle(ids)
             yield ids
 
