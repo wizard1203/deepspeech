@@ -196,6 +196,7 @@ def _collate_fn(batch):
         target_sizes[x] = len(target)
         targets.extend(target)
     targets = torch.IntTensor(targets)
+    print(inputs, targets, input_percentages, target_sizes)
     return inputs, targets, input_percentages, target_sizes
 
 
