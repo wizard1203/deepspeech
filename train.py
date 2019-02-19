@@ -307,91 +307,91 @@ if __name__ == '__main__':
         start_iter = 0  # Reset start iteration for next epoch
         total_cer, total_wer = 0, 0
         model.eval()
-        with torch.no_grad():
-            for i, (data) in tqdm(enumerate(test_loader), total=len(test_loader)):
-                inputs, targets, input_percentages, target_sizes = data
-                input_sizes = input_percentages.mul_(int(inputs.size(3))).int()
+        # with torch.no_grad():
+        #     for i, (data) in tqdm(enumerate(test_loader), total=len(test_loader)):
+        #         inputs, targets, input_percentages, target_sizes = data
+        #         input_sizes = input_percentages.mul_(int(inputs.size(3))).int()
 
-                # unflatten targets
-                split_targets = []
-                offset = 0
-                for size in target_sizes:
-                    split_targets.append(targets[offset:offset + size])
-                    offset += size
+        #         # unflatten targets
+        #         split_targets = []
+        #         offset = 0
+        #         for size in target_sizes:
+        #             split_targets.append(targets[offset:offset + size])
+        #             offset += size
 
-                if args.cuda:
-                    inputs = inputs.cuda()
+        #         if args.cuda:
+        #             inputs = inputs.cuda()
 
-                out, output_sizes = model(inputs, input_sizes)
+        #         out, output_sizes = model(inputs, input_sizes)
 
-                decoded_output, _ = decoder.decode(out.data, output_sizes)
-                target_strings = decoder.convert_to_strings(split_targets)
-                wer, cer = 0, 0
-                for x in range(len(target_strings)):
-                    transcript, reference = decoded_output[x][0], target_strings[x][0]
-                    wer += decoder.wer(transcript, reference) / float(len(reference.split()))
-                    cer += decoder.cer(transcript, reference) / float(len(reference))
-                total_cer += cer
-                total_wer += wer
-                del out
-            wer = total_wer / len(test_loader.dataset)
-            cer = total_cer / len(test_loader.dataset)
-            wer *= 100
-            cer *= 100
-            loss_results[epoch] = avg_loss
-            wer_results[epoch] = wer
-            cer_results[epoch] = cer
-            logging.info('Validation Summary Epoch: [{0}]\t'
-                  'Average WER {wer:.3f}\t'
-                  'Average CER {cer:.3f}\t'.format(epoch + 1, wer=wer, cer=cer))
+        #         decoded_output, _ = decoder.decode(out.data, output_sizes)
+        #         target_strings = decoder.convert_to_strings(split_targets)
+        #         wer, cer = 0, 0
+        #         for x in range(len(target_strings)):
+        #             transcript, reference = decoded_output[x][0], target_strings[x][0]
+        #             wer += decoder.wer(transcript, reference) / float(len(reference.split()))
+        #             cer += decoder.cer(transcript, reference) / float(len(reference))
+        #         total_cer += cer
+        #         total_wer += wer
+        #         del out
+        #     wer = total_wer / len(test_loader.dataset)
+        #     cer = total_cer / len(test_loader.dataset)
+        #     wer *= 100
+        #     cer *= 100
+        #     loss_results[epoch] = avg_loss
+        #     wer_results[epoch] = wer
+        #     cer_results[epoch] = cer
+        #     logging.info('Validation Summary Epoch: [{0}]\t'
+        #           'Average WER {wer:.3f}\t'
+        #           'Average CER {cer:.3f}\t'.format(epoch + 1, wer=wer, cer=cer))
 
-            if args.visdom and main_proc:
-                x_axis = epochs[0:epoch + 1]
-                y_axis = torch.stack(
-                    (loss_results[0:epoch + 1], wer_results[0:epoch + 1], cer_results[0:epoch + 1]), dim=1)
-                if viz_window is None:
-                    viz_window = viz.line(
-                        X=x_axis,
-                        Y=y_axis,
-                        opts=opts,
-                    )
-                else:
-                    viz.line(
-                        X=x_axis.unsqueeze(0).expand(y_axis.size(1), x_axis.size(0)).transpose(0, 1),  # Visdom fix
-                        Y=y_axis,
-                        win=viz_window,
-                        update='replace',
-                    )
-            if args.tensorboard and main_proc:
-                values = {
-                    'Avg Train Loss': avg_loss,
-                    'Avg WER': wer,
-                    'Avg CER': cer
-                }
-                tensorboard_writer.add_scalars(args.id, values, epoch + 1)
-                if args.log_params:
-                    for tag, value in model.named_parameters():
-                        tag = tag.replace('.', '/')
-                        tensorboard_writer.add_histogram(tag, to_np(value), epoch + 1)
-                        tensorboard_writer.add_histogram(tag + '/grad', to_np(value.grad), epoch + 1)
-            if args.checkpoint and main_proc:
-                file_path = '%s/deepspeech_%d.pth' % (save_folder, epoch + 1)
-                torch.save(DeepSpeech.serialize(model, optimizer=optimizer, epoch=epoch, loss_results=loss_results,
-                                                wer_results=wer_results, cer_results=cer_results),
-                           file_path)
-                # anneal lr
-                optim_state = optimizer.state_dict()
-                optim_state['param_groups'][0]['lr'] = optim_state['param_groups'][0]['lr'] / args.learning_anneal
-                optimizer.load_state_dict(optim_state)
-                logging.info('Learning rate annealed to: {lr:.6f}'.format(lr=optim_state['param_groups'][0]['lr']))
+        #     if args.visdom and main_proc:
+        #         x_axis = epochs[0:epoch + 1]
+        #         y_axis = torch.stack(
+        #             (loss_results[0:epoch + 1], wer_results[0:epoch + 1], cer_results[0:epoch + 1]), dim=1)
+        #         if viz_window is None:
+        #             viz_window = viz.line(
+        #                 X=x_axis,
+        #                 Y=y_axis,
+        #                 opts=opts,
+        #             )
+        #         else:
+        #             viz.line(
+        #                 X=x_axis.unsqueeze(0).expand(y_axis.size(1), x_axis.size(0)).transpose(0, 1),  # Visdom fix
+        #                 Y=y_axis,
+        #                 win=viz_window,
+        #                 update='replace',
+        #             )
+        #     if args.tensorboard and main_proc:
+        #         values = {
+        #             'Avg Train Loss': avg_loss,
+        #             'Avg WER': wer,
+        #             'Avg CER': cer
+        #         }
+        #         tensorboard_writer.add_scalars(args.id, values, epoch + 1)
+        #         if args.log_params:
+        #             for tag, value in model.named_parameters():
+        #                 tag = tag.replace('.', '/')
+        #                 tensorboard_writer.add_histogram(tag, to_np(value), epoch + 1)
+        #                 tensorboard_writer.add_histogram(tag + '/grad', to_np(value.grad), epoch + 1)
+        #     if args.checkpoint and main_proc:
+        #         file_path = '%s/deepspeech_%d.pth' % (save_folder, epoch + 1)
+        #         torch.save(DeepSpeech.serialize(model, optimizer=optimizer, epoch=epoch, loss_results=loss_results,
+        #                                         wer_results=wer_results, cer_results=cer_results),
+        #                    file_path)
+        #         # anneal lr
+        #         optim_state = optimizer.state_dict()
+        #         optim_state['param_groups'][0]['lr'] = optim_state['param_groups'][0]['lr'] / args.learning_anneal
+        #         optimizer.load_state_dict(optim_state)
+        #         logging.info('Learning rate annealed to: {lr:.6f}'.format(lr=optim_state['param_groups'][0]['lr']))
 
-            if (best_wer is None or best_wer > wer) and main_proc:
-                logging.info("Found better validated model, saving to %s" % args.model_path)
-                torch.save(DeepSpeech.serialize(model, optimizer=optimizer, epoch=epoch, loss_results=loss_results,
-                                                wer_results=wer_results, cer_results=cer_results), args.model_path)
-                best_wer = wer
+        #     if (best_wer is None or best_wer > wer) and main_proc:
+        #         logging.info("Found better validated model, saving to %s" % args.model_path)
+        #         torch.save(DeepSpeech.serialize(model, optimizer=optimizer, epoch=epoch, loss_results=loss_results,
+        #                                         wer_results=wer_results, cer_results=cer_results), args.model_path)
+        #         best_wer = wer
 
-                avg_loss = 0
-            if not args.no_shuffle:
-                logging.info("Shuffling batches...")
-                train_sampler.shuffle(epoch)
+        #         avg_loss = 0
+        #     if not args.no_shuffle:
+        #         logging.info("Shuffling batches...")
+        #         train_sampler.shuffle(epoch)
