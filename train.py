@@ -10,7 +10,6 @@ from warpctc_pytorch import CTCLoss
 
 from data.data_loader import AudioDataLoader, SpectrogramDataset, BucketingSampler, DistributedBucketingSampler
 from data.utils import reduce_tensor
-from decoder import GreedyDecoder
 from model import DeepSpeech, supported_rnns
 import logging
 import daytime
@@ -206,7 +205,7 @@ if __name__ == '__main__':
         optimizer = torch.optim.SGD(parameters, lr=args.lr,
                                     momentum=args.momentum, nesterov=True)
     criterion = CTCLoss()
-    decoder = GreedyDecoder(labels)
+    decoder = None
     train_dataset = SpectrogramDataset(audio_conf=audio_conf, manifest_filepath=args.train_manifest, labels=labels,
                                        normalize=True, augment=args.augment)
     test_dataset = SpectrogramDataset(audio_conf=audio_conf, manifest_filepath=args.val_manifest, labels=labels,
